@@ -1,0 +1,371 @@
+import { CyberDispatch, DispatchCategory, NewsSourceConfig, SeverityLevel } from '../types/news';
+
+export const DEFAULT_SOURCES: NewsSourceConfig[] = [
+  {
+    id: 'cisa-kev',
+    name: 'CISA Known Exploited Catalog',
+    publisherType: 'Government Advisory',
+    feedUrl: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
+    siteUrl: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
+    enabled: true,
+    articleCount: 14,
+    lastSyncedAt: new Date().toISOString(),
+    status: 'Active',
+  },
+  {
+    id: 'the-hacker-news',
+    name: 'The Hacker News',
+    publisherType: 'Independent Journalism',
+    feedUrl: 'https://feeds.feedburner.com/TheHackersNews',
+    siteUrl: 'https://thehackernews.com',
+    enabled: true,
+    articleCount: 18,
+    lastSyncedAt: new Date().toISOString(),
+    status: 'Active',
+  },
+  {
+    id: 'bleeping-computer',
+    name: 'BleepingComputer Security',
+    publisherType: 'Independent Journalism',
+    feedUrl: 'https://www.bleepingcomputer.com/feed/',
+    siteUrl: 'https://www.bleepingcomputer.com',
+    enabled: true,
+    articleCount: 16,
+    lastSyncedAt: new Date().toISOString(),
+    status: 'Active',
+  },
+  {
+    id: 'krebs-security',
+    name: 'KrebsOnSecurity',
+    publisherType: 'Independent Journalism',
+    feedUrl: 'https://krebsonsecurity.com/feed/',
+    siteUrl: 'https://krebsonsecurity.com',
+    enabled: true,
+    articleCount: 8,
+    lastSyncedAt: new Date().toISOString(),
+    status: 'Active',
+  },
+  {
+    id: 'sans-isc',
+    name: 'SANS Internet Storm Center',
+    publisherType: 'Threat Intelligence Lab',
+    feedUrl: 'https://isc.sans.edu/rssfeed_full.xml',
+    siteUrl: 'https://isc.sans.edu',
+    enabled: true,
+    articleCount: 11,
+    lastSyncedAt: new Date().toISOString(),
+    status: 'Active',
+  },
+  {
+    id: 'project-zero',
+    name: 'Google Project Zero & Mandiant',
+    publisherType: 'Threat Intelligence Lab',
+    feedUrl: 'https://googleprojectzero.blogspot.com/feeds/posts/default',
+    siteUrl: 'https://googleprojectzero.blogspot.com',
+    enabled: true,
+    articleCount: 9,
+    lastSyncedAt: new Date().toISOString(),
+    status: 'Active',
+  },
+];
+
+const now = Date.now();
+const minsAgo = (m: number) => new Date(now - m * 60 * 1000).toISOString();
+
+export const CURATED_DISPATCHES: CyberDispatch[] = [
+  {
+    id: 'dispatch-cve-2026-41892',
+    title: 'Unauthenticated Remote Code Execution Discovered in Enterprise Edge VPN Gateways',
+    summary:
+      'Threat researchers have confirmed active in-the-wild exploitation of a pre-authentication heap overflow affecting enterprise SSL-VPN appliances across financial and critical energy operators.',
+    leadBody: [
+      'During coordinated incident response investigations across three European telecommunications carriers, forensic analysts isolated an unauthenticated heap-based buffer overflow in the TLS session resumption handler of widely deployed perimeter VPN concentrators.',
+      'By crafting malformed session ticket extensions exceeding the static 4096-byte parsing boundary, remote adversaries can overwrite adjacent function pointers in the worker daemon and execute arbitrary shellcode with root privileges without valid credentials or prior user interaction.',
+      'Once inside the perimeter appliance, the intrusion set deploys an in-memory ELF implant that hooks standard authentication routines to harvest Cleartext LDAP and RADIUS session tokens while maintaining persistence across minor firmware reboots.',
+    ],
+    sourceId: 'cisa-kev',
+    sourceName: 'CISA Known Exploited Catalog',
+    sourceUrl: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
+    author: 'Joint Cyber Defense Collaborative (JCDC)',
+    publishedAt: minsAgo(8),
+    readingTimeMinutes: 5,
+    category: DispatchCategory.ZERO_DAY,
+    severity: SeverityLevel.CRITICAL,
+    cveId: 'CVE-2026-41892',
+    cvssScore: 9.8,
+    activelyExploited: true,
+    imageUrl: '/src/assets/images/featured_zero_day_datacenter_1793628778962.jpg',
+    imageCaption:
+      'Fig. 1 — High-density enterprise perimeter switching vault where out-of-band telemetry first flagged anomalous TLS session ticket payloads.',
+    affectedProducts: [
+      {
+        vendor: 'NetCore Systems',
+        product: 'EdgeGate SSL-VPN Appliance',
+        versionsAffected: '4.12.0 through 4.16.3',
+        fixedVersion: '4.16.4-hotfix2',
+      },
+      {
+        vendor: 'NetCore Systems',
+        product: 'Virtual Fabric Concentrator (vFC)',
+        versionsAffected: '2.8.0 through 2.9.5',
+        fixedVersion: '2.9.6',
+      },
+    ],
+    iocs: [
+      {
+        type: 'CVE',
+        value: 'CVE-2026-41892',
+        context: 'Pre-auth heap buffer overflow in TLS ticket parser',
+      },
+      {
+        type: 'SHA-256',
+        value: '8f4b2e91c7d03a5194b8c760e1f2d904a7183c5b2e190a4f8b671e329d0a11c4',
+        context: 'In-memory ELF credential harvesting implant (libpam_audit_ext.so)',
+      },
+      {
+        type: 'IPv4',
+        value: '185.219.140.78',
+        context: 'Primary command-and-control listener observed in initial telemetry',
+      },
+    ],
+    remediationSteps: [
+      'Apply firmware update 4.16.4-hotfix2 or 2.9.6 immediately across all internet-facing SSL-VPN nodes.',
+      'Disable stateless TLS session ticket resumption (--no-stateless-tickets) if immediate patching requires a scheduled maintenance window.',
+      'Invalidate all active VPN session tokens and rotate bound LDAP/RADIUS service account credentials.',
+      'Inspect /var/log/vpnd/audit.log for crash signatures (SIGSEGV in worker process pid) followed by unexpected child /bin/sh invocations.',
+    ],
+  },
+  {
+    id: 'dispatch-bgp-route-leak-cloud',
+    title: 'Sub-Second BGP Prefix Hijack Briefly Redirects Multi-Cloud API Gateway Traffic',
+    summary:
+      'An unauthorized Autonomous System announcement lacking strict RPKI Route Origin Validation diverted encrypted control-plane traffic across four regional cloud interconnects for 114 seconds.',
+    leadBody: [
+      'Network routing monitors detected an anomalous BGP announcement originating from a transit provider in Eastern Europe that advertised more-specific /24 prefixes belonging to three hyperscale cloud API gateway endpoints.',
+      'While providers enforcing strict Resource Public Key Infrastructure (RPKI) Route Origin Validation (ROV) automatically dropped the invalid routes at peering borders, several secondary regional exchanges propagated the announcement for nearly two minutes.',
+      'Although mTLS certificate pinning prevented decryption of workload payloads, the incident underscores the operational necessity of enforcing both RPKI ROV and cryptographic BGPsec signing on critical cloud interconnects.',
+    ],
+    sourceId: 'sans-isc',
+    sourceName: 'SANS Internet Storm Center',
+    sourceUrl: 'https://isc.sans.edu',
+    author: 'Dr. Marcus Vance, Routing Security Handler',
+    publishedAt: minsAgo(24),
+    readingTimeMinutes: 4,
+    category: DispatchCategory.CLOUD_INFRA,
+    severity: SeverityLevel.HIGH,
+    cveId: 'CVE-2026-39014',
+    cvssScore: 8.2,
+    activelyExploited: false,
+    imageUrl: '/src/assets/images/dispatch_cloud_infrastructure_1793628780951.jpg',
+    imageCaption:
+      'Fig. 2 — Structured fiber-optic distribution cross-connects at a Tier-1 metropolitan internet exchange point.',
+    affectedProducts: [
+      {
+        vendor: 'Multi-Vendor Routing',
+        product: 'Unfiltered eBGP Transit Peering Sessions',
+        versionsAffected: 'Peers without RPKI ROA validation',
+        fixedVersion: 'Enforce RPKI Drop-Invalid policy',
+      },
+    ],
+    iocs: [
+      {
+        type: 'IPv4',
+        value: '91.242.188.0/24',
+        context: 'Unauthorized more-specific prefix announcement window (04:12–04:14 UTC)',
+      },
+    ],
+    remediationSteps: [
+      'Verify that cryptographic Route Origin Authorizations (ROAs) are published with strict maximum prefix length (/24) for all public address blocks.',
+      'Enable strict RPKI Route Origin Validation (ROV) on all external border routers to automatically discard Invalid announcements.',
+      'Audit mTLS certificate pinning configurations across microservice ingress controllers.',
+    ],
+  },
+  {
+    id: 'dispatch-hsm-side-channel',
+    title: 'Electromagnetic Fault Injection Bypasses Firmware Attestation in Hardware Security Modules',
+    summary:
+      'Academic and industrial cryptographers demonstrated a non-invasive voltage glitching technique capable of extracting ECDSA P-384 signing keys from unshielded PCIe cryptographic accelerators.',
+    leadBody: [
+      'A joint research team from ETH Zurich and Google Project Zero published findings detailing how precise voltage fault injection during the secure boot ROM signature check can force hardware security modules into an unauthenticated debug state.',
+      'While exploiting the flaw requires physical access to the host server chassis or a compromised co-located bare-metal management controller, the researchers also demonstrated a software-induced frequency throttling side-channel that leaks partial nonce bits over 40,000 signing operations.',
+      'Hardware vendors have released updated microcontroller microcode that introduces randomized double-verification loops during boot attestation and constant-time scalar multiplication in the ECDSA engine.',
+    ],
+    sourceId: 'project-zero',
+    sourceName: 'Google Project Zero & Mandiant',
+    sourceUrl: 'https://googleprojectzero.blogspot.com',
+    author: 'Elena Rostova & K. Takahashi',
+    publishedAt: minsAgo(47),
+    readingTimeMinutes: 6,
+    category: DispatchCategory.THREAT_INTEL,
+    severity: SeverityLevel.HIGH,
+    cveId: 'CVE-2026-37411',
+    cvssScore: 7.9,
+    activelyExploited: false,
+    imageUrl: '/src/assets/images/dispatch_hardware_silicon_1793628781255.jpg',
+    imageCaption:
+      'Fig. 3 — Enterprise 7nm cryptographic silicon wafer alongside a tamper-responsive PCIe HSM-900 accelerator card.',
+    affectedProducts: [
+      {
+        vendor: 'VaultSilicon Corp.',
+        product: 'HSM-900 PCIe Cryptographic Accelerator',
+        versionsAffected: 'Firmware < 6.4.2',
+        fixedVersion: 'Firmware 6.4.2 (Signed Microcode Rev B)',
+      },
+    ],
+    iocs: [
+      {
+        type: 'CVE',
+        value: 'CVE-2026-37411',
+        context: 'Non-constant-time ECDSA P-384 nonce generation under frequency throttling',
+      },
+    ],
+    remediationSteps: [
+      'Deploy signed HSM microcode package 6.4.2 across all physical and cloud-hosted key management clusters.',
+      'Restrict bare-metal IPMI/BMC power-management interfaces to isolated out-of-band management VLANs.',
+    ],
+  },
+  {
+    id: 'dispatch-linux-io-uring-priv-esc',
+    title: 'Linux Kernel io_uring Fixed-Buffer Reference Count Race Permits Local Container Escape',
+    summary:
+      'A use-after-free condition in the asynchronous I/O subsystem allows unprivileged container processes to overwrite host page cache structures and achieve host root execution.',
+    leadBody: [
+      'Kernel security maintainers merged an urgent patch addressing a race condition between io_uring ring teardown and asynchronous fixed-buffer registration on multi-core systems.',
+      'When an unprivileged user namespace is permitted to initialize io_uring instances inside a containerized workload, concurrent cancellation requests can decrement a page reference counter twice, returning an active kernel slab page to the buddy allocator prematurely.',
+      'Cloud-native security teams advise disabling io_uring system calls via default seccomp profiles for untrusted multi-tenant workloads until host kernels are rolled to the patched stable release.',
+    ],
+    sourceId: 'the-hacker-news',
+    sourceName: 'The Hacker News',
+    sourceUrl: 'https://thehackernews.com',
+    author: 'Ravie Lakshmanan',
+    publishedAt: minsAgo(75),
+    readingTimeMinutes: 4,
+    category: DispatchCategory.ZERO_DAY,
+    severity: SeverityLevel.CRITICAL,
+    cveId: 'CVE-2026-40219',
+    cvssScore: 9.1,
+    activelyExploited: true,
+    affectedProducts: [
+      {
+        vendor: 'Linux Kernel Organization',
+        product: 'Linux Kernel (fs/io_uring)',
+        versionsAffected: '6.6.x prior to 6.6.59, 6.11.x prior to 6.11.7',
+        fixedVersion: '6.6.59 LTS / 6.11.7',
+      },
+    ],
+    iocs: [
+      {
+        type: 'CVE',
+        value: 'CVE-2026-40219',
+        context: 'io_uring fixed-buffer use-after-free privilege escalation',
+      },
+    ],
+    remediationSteps: [
+      'Upgrade host nodes to Linux kernel 6.6.59 LTS or 6.11.7 immediately.',
+      'Set sysctl kernel.io_uring_disabled=2 on multi-tenant Kubernetes worker nodes that do not require io_uring.',
+      'Enforce strict seccomp profiles blocking io_uring_setup, io_uring_enter, and io_uring_register.',
+    ],
+  },
+  {
+    id: 'dispatch-ransomware-esxi-vcenter',
+    title: 'BlackBastion Affiliate Group Targets Unpatched vCenter and Hypervisor Management Planes',
+    summary:
+      'Incident responders warn of rapid encryption campaigns leveraging stolen SAML signing certificates to mint administrative tokens on virtualized storage clusters.',
+    leadBody: [
+      'Over the past 72 hours, multiple healthcare and logistics enterprises reported coordinated intrusions in which operators bypassed multi-factor authentication by importing rogue SAML identity provider certificates into hypervisor management appliances.',
+      'Rather than deploying noisy Windows domain ransomware, the threat actor executes a compact POSIX shell script directly on the hypervisor host to encrypt raw VMFS datastores and purge volume shadow snapshots.',
+      'Defenders are urged to audit all registered Identity Provider (IdP) certificates in virtual appliance directories and restrict SSH access on hypervisor hosts.',
+    ],
+    sourceId: 'bleeping-computer',
+    sourceName: 'BleepingComputer Security',
+    sourceUrl: 'https://www.bleepingcomputer.com',
+    author: 'Lawrence Abrams',
+    publishedAt: minsAgo(112),
+    readingTimeMinutes: 5,
+    category: DispatchCategory.RANSOMWARE,
+    severity: SeverityLevel.CRITICAL,
+    cveId: 'CVE-2026-38801',
+    cvssScore: 9.4,
+    activelyExploited: true,
+    affectedProducts: [
+      {
+        vendor: 'Enterprise Virtualization',
+        product: 'Hypervisor Directory & SAML SSO Service',
+        versionsAffected: '8.0 U2 prior to build 24091160',
+        fixedVersion: '8.0 U3b',
+      },
+    ],
+    iocs: [
+      {
+        type: 'SHA-256',
+        value: '3c91a04f82e61d74e9a102f8c731d55e01b92a4c78d1e60a3f9c2b814e07d219',
+        context: 'Hypervisor ELF datastore locker binary (/tmp/.vpxd-worker)',
+      },
+      {
+        type: 'Domain',
+        value: 'telemetry-vcenter-sync.com',
+        context: 'Lookalike C2 domain used for exfiltrating directory configurations',
+      },
+    ],
+    remediationSteps: [
+      'Audit all trusted SAML Identity Provider certificates registered within hypervisor SSO configurations.',
+      'Disable ESXi Shell and SSH services across production clusters unless actively troubleshooting.',
+      'Enable immutable snapshots on SAN/NAS storage arrays backing critical virtual machine datastores.',
+    ],
+  },
+  {
+    id: 'dispatch-npm-pypi-supply-chain',
+    title: 'Coordinated Typosquatting Campaign Injects Credential Stealers into 42 CI/CD Utility Packages',
+    summary:
+      'Automated static analysis uncovered obfuscated post-install hooks harvesting AWS OIDC tokens, GitHub Actions secrets, and Kubernetes kubeconfig files during build pipelines.',
+    leadBody: [
+      'Supply-chain security monitors flagged 42 newly published packages across npm and PyPI that mimic popular linting and OpenAPI schema generation libraries using subtle homoglyph and hyphenation variations.',
+      'Unlike traditional developer workstation malware, the malicious post-install scripts specifically inspect environment variables for CI=true and GITHUB_ACTIONS=true before querying local metadata endpoints and exfiltrating ephemeral cloud deployment tokens.',
+      'All identified packages have been removed by registry maintainers, and organizations using lockfile integrity verification with private artifact proxies were unaffected.',
+    ],
+    sourceId: 'krebs-security',
+    sourceName: 'KrebsOnSecurity',
+    sourceUrl: 'https://krebsonsecurity.com',
+    author: 'Brian Krebs',
+    publishedAt: minsAgo(165),
+    readingTimeMinutes: 6,
+    category: DispatchCategory.THREAT_INTEL,
+    severity: SeverityLevel.ELEVATED,
+    activelyExploited: false,
+    iocs: [
+      {
+        type: 'Domain',
+        value: 'registry-metrics-collector.io',
+        context: 'Webhook endpoint receiving base64-encoded CI/CD environment variables',
+      },
+    ],
+    remediationSteps: [
+      'Enforce --ignore-scripts or lockfile-only installations (npm ci --ignore-scripts) in ephemeral CI/CD runners.',
+      'Scope GitHub Actions GITHUB_TOKEN permissions to read-only by default and use short-lived OIDC claims bound to specific branch refs.',
+    ],
+  },
+  {
+    id: 'dispatch-nist-pqc-migration-mandate',
+    title: 'CISA and NIST Issue Updated Timeline for Post-Quantum TLS 1.3 Key Exchange Adoption',
+    summary:
+      'Federal agencies and critical infrastructure operators receive concrete implementation guidance for hybrid ML-KEM (FIPS 203) key establishment to counter harvest-now, decrypt-later threats.',
+    leadBody: [
+      'Following the formal standardization of FIPS 203 (ML-KEM), FIPS 204 (ML-DSA), and FIPS 205 (SLH-DSA), cybersecurity authorities published an operational migration playbook for transitioning public-facing TLS 1.3 endpoints to hybrid post-quantum key exchange.',
+      'The directive prioritizes long-lived sensitive data flows—including healthcare records, diplomatic communications, and root certificate authority hierarchies—requiring hybrid X25519MLKEM768 support in load balancers and ingress proxies.',
+      'Performance benchmarks across major CDN networks confirm that hybrid key establishment adds less than 1.2 milliseconds of handshake latency when TCP initial congestion windows are properly tuned.',
+    ],
+    sourceId: 'cisa-kev',
+    sourceName: 'CISA Known Exploited Catalog',
+    sourceUrl: 'https://www.cisa.gov',
+    author: 'NIST Cryptographic Technology Group',
+    publishedAt: minsAgo(230),
+    readingTimeMinutes: 5,
+    category: DispatchCategory.POLICY,
+    severity: SeverityLevel.INFORMATIONAL,
+    activelyExploited: false,
+    remediationSteps: [
+      'Inventory all external TLS termination points, VPN concentrators, and PKI hardware security modules for FIPS 203 (ML-KEM) readiness.',
+      'Enable hybrid X25519MLKEM768 key exchange groups in OpenSSL 3.4+ and BoringSSL-backed reverse proxies.',
+    ],
+  },
+];

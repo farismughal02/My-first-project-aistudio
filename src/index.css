@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-serif: "Fraunces", Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, .font-display {
+    text-wrap: balance;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
