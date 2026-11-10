@@ -38,107 +38,8 @@ type DrawerTab = 'technical' | 'beginner-ai';
 const READ_LATER_STORAGE_KEY = 'sentinel_wire_read_later_v1';
 const THEME_STORAGE_KEY = 'sentinel_wire_theme_v1';
 
-const SIMULATED_BREAKING_POOL: Omit<CyberDispatch, 'id' | 'publishedAt'>[] = [
-  {
-    title: 'Zero-Click Heap Corruption in Enterprise SIP VoIP Session Border Controllers',
-    summary:
-      'Malformed SDP media negotiation packets trigger deterministic remote code execution across unpatched carrier-grade session border controllers.',
-    leadBody: [
-      'Telecommunications security teams have identified a zero-click memory corruption vulnerability in the Session Description Protocol (SDP) parser of enterprise Session Border Controllers.',
-      'An unauthenticated attacker sending a specially crafted SIP INVITE request containing oversized codec attribute parameters can overflow a fixed heap buffer prior to SIP digest authentication.',
-      'Network operators should immediately apply ingress SIP header normalization rules and upgrade to the vendor hotfix release.',
-    ],
-    sourceId: 'cisa-kev',
-    sourceName: 'CISA Known Exploited Catalog',
-    sourceUrl: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
-    author: 'CISA Threat Hunting Subdivision',
-    readingTimeMinutes: 4,
-    category: DispatchCategory.ZERO_DAY,
-    severity: SeverityLevel.CRITICAL,
-    cveId: 'CVE-2026-43108',
-    cvssScore: 9.8,
-    activelyExploited: true,
-    affectedProducts: [
-      {
-        vendor: 'CarrierVoice Networks',
-        product: 'AuraSBC Enterprise Gateway',
-        versionsAffected: '11.2.0 through 11.4.8',
-        fixedVersion: '11.4.9-sec1',
-      },
-    ],
-    iocs: [
-      {
-        type: 'CVE',
-        value: 'CVE-2026-43108',
-        context: 'Pre-auth SIP INVITE SDP heap corruption',
-      },
-      {
-        type: 'IPv4',
-        value: '194.165.16.92',
-        context: 'Automated SIP scanner source observed by honeypots',
-      },
-    ],
-    remediationSteps: [
-      'Upgrade AuraSBC firmware to 11.4.9-sec1 across all voice peering trunks.',
-      'Block unsolicited external UDP/TCP 5060 and 5061 traffic from untrusted autonomous systems.',
-    ],
-  },
-  {
-    title: 'Rust-Based Ransomware Variant Targets Misconfigured Kubernetes etcd Snapshots',
-    summary:
-      'Threat actors scan exposed port 2379 endpoints to exfiltrate cluster secrets and encrypt persistent volume claims using ChaCha20-Poly1305.',
-    leadBody: [
-      'Cloud incident responders have documented a new extortion campaign specifically engineered for containerized production environments where etcd key-value stores are exposed without mutual TLS client authentication.',
-      'Upon discovering an unauthenticated etcd endpoint, the automated binary dumps all Kubernetes Secret objects, uses cluster-admin service tokens to schedule privileged DaemonSets on every worker node, and encrypts mounted hostPath volumes.',
-      'Organizations must verify that etcd peers only listen on isolated control-plane interfaces with strict mTLS client certificate enforcement.',
-    ],
-    sourceId: 'bleeping-computer',
-    sourceName: 'BleepingComputer Security',
-    sourceUrl: 'https://www.bleepingcomputer.com',
-    author: 'Sergiu Gatlan',
-    readingTimeMinutes: 5,
-    category: DispatchCategory.RANSOMWARE,
-    severity: SeverityLevel.HIGH,
-    cveId: 'CVE-2026-41005',
-    cvssScore: 8.6,
-    activelyExploited: true,
-    iocs: [
-      {
-        type: 'SHA-256',
-        value: 'e49a801c2d739f401a28b7c6510e94d2f83a1109c742e5b8a0192f64c3d81a50',
-        context: 'Rust ELF binary deployed via rogue DaemonSet (kube-proxy-sync)',
-      },
-    ],
-    remediationSteps: [
-      'Ensure --client-cert-auth=true is enabled on all etcd cluster members.',
-      'Enforce Kubernetes Pod Security Admission (restricted profile) to block privileged DaemonSet creation.',
-    ],
-  },
-  {
-    title: 'European NIS2 Directive Enforcement Begins Mandatory 24-Hour Early Warning Reporting',
-    summary:
-      'Essential and important entities across energy, banking, digital infrastructure, and SaaS face strict statutory timelines for significant cyber incident disclosure.',
-    leadBody: [
-      'National Computer Security Incident Response Teams (CSIRTs) across European Union member states have activated unified reporting portals under the NIS2 regulatory framework.',
-      'Covered organizations must submit an initial early warning within 24 hours of becoming aware of a significant incident, followed by a comprehensive technical assessment within 72 hours.',
-      'Legal and security operations teams should ensure incident severity playbooks map directly to the statutory thresholds for service disruption and data exfiltration.',
-    ],
-    sourceId: 'the-hacker-news',
-    sourceName: 'The Hacker News',
-    sourceUrl: 'https://thehackernews.com',
-    author: 'Editorial Compliance Desk',
-    readingTimeMinutes: 3,
-    category: DispatchCategory.POLICY,
-    severity: SeverityLevel.INFORMATIONAL,
-    activelyExploited: false,
-    remediationSteps: [
-      'Update SOC incident escalation runbooks to include the 24-hour CSIRT early-warning notification checkpoint.',
-      'Designate primary and backup regulatory liaison officers across all EU operating subsidiaries.',
-    ],
-  },
-];
-
 function formatRelativeTime(isoDate: string): string {
+  if (!isoDate || Number.isNaN(Date.parse(isoDate))) return 'not yet synced';
   const diffMs = Date.now() - new Date(isoDate).getTime();
   const diffSec = Math.max(1, Math.floor(diffMs / 1000));
   if (diffSec < 60) return `${diffSec}s ago`;
@@ -152,7 +53,7 @@ function formatRelativeTime(isoDate: string): string {
 
 function formatUtcClock(isoDate: string): string {
   const d = new Date(isoDate);
-  if (Number.isNaN(d.getTime())) return '00:00 UTC';
+  if (Number.isNaN(d.getTime())) return 'not yet synced';
   return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
 }
 
@@ -213,7 +114,7 @@ const ResilientEditorialImage: React.FC<ResilientEditorialImageProps> = ({
               </p>
             </div>
             <div className="text-[11px] font-mono text-stone-500 dark:text-slate-500">
-              Verified Technical Dispatch Illustration
+              Illustrative image
             </div>
           </div>
         )}
@@ -258,12 +159,30 @@ export default function App() {
 
   // Navigation & Feed data
   const [activeSection, setActiveSection] = useState<ActiveSection>('feed');
-  const [dispatches, setDispatches] = useState<CyberDispatch[]>(CURATED_DISPATCHES);
-  const [sources, setSources] = useState<NewsSourceConfig[]>(DEFAULT_SOURCES);
+  const [liveDispatches, setDispatches] = useState<CyberDispatch[]>([]);
+  const [showDemo, setShowDemo] = useState(false);
+  const dispatches = showDemo ? CURATED_DISPATCHES : liveDispatches;
+  const [serverSources, setSources] = useState<NewsSourceConfig[]>(DEFAULT_SOURCES);
+  const [mutedSourceIds, setMutedSourceIds] = useState<string[]>(() => {
+    try {
+      const value = JSON.parse(localStorage.getItem('sentinel_wire_muted_v1') || '[]');
+      return Array.isArray(value) ? value.filter(x => typeof x === 'string') : [];
+    } catch { return []; }
+  });
+  const sources = useMemo(() => serverSources.map(s => ({ ...s, enabled: !mutedSourceIds.includes(s.id) })), [serverSources, mutedSourceIds]);
+  useEffect(() => {
+    try { localStorage.setItem('sentinel_wire_muted_v1', JSON.stringify(mutedSourceIds)); } catch { /* Storage is optional. */ }
+  }, [mutedSourceIds]);
+  const [ownerToken, setOwnerToken] = useState('');
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [feedError, setFeedError] = useState('');
+  const syncingRef = useRef(false);
+  useEffect(() => {
+    fetch('/api/config', { signal: AbortSignal.timeout(10000) }).then(r => r.json()).then(c => setAiEnabled(c.aiEnabled === true)).catch(() => {});
+  }, []);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string>(new Date().toISOString());
+  const [lastSyncedAt, setLastSyncedAt] = useState<string>('');
   const [autoPollEnabled, setAutoPollEnabled] = useState<boolean>(true);
-  const [simulatedIndex, setSimulatedIndex] = useState<number>(0);
 
   // Filtering & Categorization state
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -276,11 +195,11 @@ export default function App() {
   const [savedArticles, setSavedArticles] = useState<CyberDispatch[]>(() => {
     try {
       const raw = localStorage.getItem(READ_LATER_STORAGE_KEY);
-      if (!raw) return [CURATED_DISPATCHES[0], CURATED_DISPATCHES[2]];
+      if (!raw) return [];
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed) ? parsed.filter(a => a && typeof a.id === 'string' && typeof a.title === 'string' && typeof a.summary === 'string' && Array.isArray(a.leadBody) && typeof a.sourceName === 'string' && typeof a.category === 'string').map(a => a.isLiveRss ? ({ ...a, dataOrigin: 'live', severity: SeverityLevel.UNKNOWN, cvssScore: undefined, activelyExploited: undefined }) : ({ ...a, dataOrigin: 'demo', title: a.title.startsWith('[DEMO]') ? a.title : `[DEMO] ${a.title}` })) : [];
     } catch {
-      return [CURATED_DISPATCHES[0]];
+      return [];
     }
   });
 
@@ -370,8 +289,9 @@ export default function App() {
       try {
         const res = await fetch('/api/ai/explain', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dispatch, forceRegenerate }),
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ownerToken}` },
+          signal: AbortSignal.timeout(35000),
+          body: JSON.stringify({ articleId: dispatch.id, forceRegenerate }),
         });
 
         const data = await res.json();
@@ -392,7 +312,7 @@ export default function App() {
         setAiLoadingById((prev) => ({ ...prev, [dispatch.id]: false }));
       }
     },
-    [aiGuidesById]
+    [aiGuidesById, ownerToken]
   );
 
   // Open article drawer directly in Beginner Learning Mode
@@ -440,8 +360,9 @@ export default function App() {
     try {
       const res = await fetch('/api/ai/ask', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dispatch, question: questionText }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ownerToken}` },
+          signal: AbortSignal.timeout(35000),
+        body: JSON.stringify({ articleId: dispatch.id, question: questionText }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -464,46 +385,26 @@ export default function App() {
     }
   };
 
-  // Fetch live aggregated feed from Express server
-  const syncLiveFeed = useCallback(
-    async (force = false, silent = false) => {
-      if (!silent) setIsSyncing(true);
-      try {
-        const response = await fetch(`/api/feed${force ? '?force=true' : ''}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data.dispatches) && data.dispatches.length > 0) {
-            setDispatches((prev) => {
-              const map = new Map<string, CyberDispatch>();
-              for (const item of data.dispatches) {
-                map.set(item.id, item);
-              }
-              for (const existing of prev) {
-                if (existing.id.startsWith('sim-') && !map.has(existing.id)) {
-                  map.set(existing.id, existing);
-                }
-              }
-              return Array.from(map.values()).sort(
-                (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-              );
-            });
-          }
-          if (Array.isArray(data.sources)) {
-            setSources(data.sources);
-          }
-          setLastSyncedAt(data.syncedAt || new Date().toISOString());
-          if (force) {
-            showToast('Live threat wire synchronized across all active feeds');
-          }
-        }
-      } catch {
-        setLastSyncedAt(new Date().toISOString());
-      } finally {
-        if (!silent) setIsSyncing(false);
-      }
-    },
-    [showToast]
-  );
+  // Preserve the last good feed on errors; share overlapping refresh requests.
+  const syncLiveFeed = useCallback(async (_force = false, silent = false) => {
+    if (syncingRef.current) return;
+    syncingRef.current = true;
+    if (!silent) setIsSyncing(true);
+    try {
+      const response = await fetch('/api/feed', { signal: AbortSignal.timeout(60000) });
+      if (!response.ok) throw new Error('Feed refresh failed. Previous articles are still available.');
+      const data = await response.json();
+      if (!Array.isArray(data.dispatches) || !Array.isArray(data.sources)) throw new Error('Invalid feed response.');
+      setDispatches(data.dispatches);
+      setSources(data.sources);
+      if (data.syncedAt) setLastSyncedAt(data.syncedAt);
+      const failures = data.sources.filter((source: NewsSourceConfig) => source.status === 'Error' || source.status === 'Stale');
+      setFeedError(failures.length ? `${failures.length} feed(s) could not refresh. Check Sources for details; previous articles are retained.` : '');
+      if (!silent && !failures.length) showToast('Feed refreshed (server cache may be up to 45 seconds old).');
+    } catch (error) {
+      setFeedError(error instanceof Error ? error.message : 'Feed refresh failed.');
+    } finally { syncingRef.current = false; setIsSyncing(false); }
+  }, [showToast]);
 
   useEffect(() => {
     syncLiveFeed(false, false);
@@ -538,25 +439,9 @@ export default function App() {
     [showToast]
   );
 
-  // Inject a simulated real-time breaking dispatch
-  const injectBreakingAlert = () => {
-    const template = SIMULATED_BREAKING_POOL[simulatedIndex % SIMULATED_BREAKING_POOL.length];
-    const newAlert: CyberDispatch = {
-      ...template,
-      id: `sim-${Date.now()}`,
-      publishedAt: new Date().toISOString(),
-    };
-    setSimulatedIndex((i) => i + 1);
-    setDispatches((prev) => [newAlert, ...prev]);
-    setLastSyncedAt(new Date().toISOString());
-    showToast(`New live dispatch ingested: ${newAlert.cveId || newAlert.category}`);
-  };
-
-  // Toggle individual news source enabled state
+  // Demo stories are a separate, explicitly labeled view.
   const toggleSourceEnabled = (sourceId: string) => {
-    setSources((prev) =>
-      prev.map((s) => (s.id === sourceId ? { ...s, enabled: !s.enabled } : s))
-    );
+    setMutedSourceIds(prev => prev.includes(sourceId) ? prev.filter(id => id !== sourceId) : [...prev, sourceId]);
   };
 
   const enabledSourceIds = useMemo(() => {
@@ -690,7 +575,8 @@ export default function App() {
     try {
       const res = await fetch('/api/sources', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ownerToken}` },
+          signal: AbortSignal.timeout(35000),
         body: JSON.stringify({
           name: newSourceName.trim(),
           feedUrl: newSourceUrl.trim(),
@@ -698,30 +584,14 @@ export default function App() {
           publisherType: newSourceType,
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.sources)) setSources(data.sources);
-        if (Array.isArray(data.dispatches)) setDispatches(data.dispatches);
-        setNewSourceName('');
-        setNewSourceUrl('');
-        showToast(`Connected feed source: ${newSourceName.trim()}`);
-      }
-    } catch {
-      const fallbackSource: NewsSourceConfig = {
-        id: `custom-${Date.now()}`,
-        name: newSourceName.trim(),
-        publisherType: newSourceType,
-        feedUrl: newSourceUrl.trim(),
-        siteUrl: newSourceUrl.trim(),
-        enabled: true,
-        articleCount: 1,
-        lastSyncedAt: new Date().toISOString(),
-        status: 'Custom',
-      };
-      setSources((prev) => [...prev, fallbackSource]);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not add this source.');
+      if (Array.isArray(data.sources)) setSources(data.sources);
       setNewSourceName('');
       setNewSourceUrl('');
-      showToast(`Added custom feed source: ${fallbackSource.name}`);
+      showToast('Source saved. It will be checked on the next scheduled feed refresh.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not add this source.');
     } finally {
       setIsAddingSource(false);
     }
@@ -1044,6 +914,7 @@ export default function App() {
                   onChange={(e) =>
                     setQaInputById((prev) => ({ ...prev, [dispatch.id]: e.target.value }))
                   }
+                  maxLength={1000}
                   placeholder="Ask anything about this threat in plain English..."
                   className="flex-1 px-3 py-2 text-xs bg-[#FBF9F5] dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-md text-stone-900 dark:text-slate-100 placeholder:text-stone-400 focus:outline-none focus:border-stone-500"
                 />
@@ -1084,6 +955,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FBF9F5] dark:bg-slate-950 text-stone-900 dark:text-slate-100 transition-colors duration-150">
+      <section className="px-6 py-3 text-sm border-b border-stone-300 dark:border-slate-700" aria-label="Feed status and owner access">
+        <p>Live article severity, CVSS and exploitation status are unknown unless verified. Categories are keyword suggestions.</p>
+        {showDemo && <p className="font-semibold text-amber-800 dark:text-amber-300">DEMO MODE — fictional examples for learning, not verified reporting or actionable advisories.</p>}
+        {feedError && <p role="alert" className="text-red-700 dark:text-red-400">{feedError}</p>}
+        <details className="mt-2">
+          <summary className="cursor-pointer">Owner access — AI and source management</summary>
+          <label className="block mt-2">Access token
+            <input type="password" value={ownerToken} onChange={e => setOwnerToken(e.target.value)} autoComplete="off" maxLength={256} className="ml-2 p-2 border rounded bg-white dark:bg-slate-900" />
+          </label>
+          <p className="mt-1">The token stays in this tab's memory. Only enter it on your own trusted HTTPS site or localhost.</p>
+          <button type="button" onClick={() => setOwnerToken('')} className="underline">Clear token</button>
+          {!aiEnabled && <p>AI is unavailable until the server has a valid API key and model configured.</p>}
+        </details>
+      </section>
       {/* Strict 3-Zone Top Bar Contract */}
       <header className="sticky top-0 z-30 bg-[#FBF9F5]/95 dark:bg-slate-950/95 backdrop-blur-xs border-b border-stone-200 dark:border-slate-800">
         <div className="max-w-[1360px] mx-auto flex items-center justify-between gap-8 px-6 py-4">
@@ -1211,7 +1096,7 @@ export default function App() {
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div>
               <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-slate-400 tabular-nums">
-                CONTINUOUS THREAT &amp; VULNERABILITY WIRE · UPDATED {formatUtcClock(lastSyncedAt)}
+                LAST SUCCESSFUL SOURCE UPDATE · {formatUtcClock(lastSyncedAt)}
               </p>
               <h1 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight text-stone-900 dark:text-slate-50 mt-1.5">
                 {activeSection === 'read-later'
@@ -1230,11 +1115,11 @@ export default function App() {
             <div className="flex flex-wrap items-center gap-2.5">
               <button
                 type="button"
-                onClick={injectBreakingAlert}
+                onClick={() => setShowDemo(v => !v)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-stone-800 dark:text-slate-200 bg-stone-200/70 hover:bg-stone-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-stone-300/80 dark:border-slate-800 rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                <span>Simulate Incoming Alert</span>
+                <span>{showDemo ? 'Show live news' : 'View demo stories'}</span>
               </button>
 
               <button
@@ -1544,7 +1429,8 @@ export default function App() {
                         <span aria-hidden="true">·</span>
                         <span className="font-mono">{source.articleCount} dispatches indexed</span>
                         <span aria-hidden="true">·</span>
-                        <span>Synced {formatRelativeTime(source.lastSyncedAt)}</span>
+                        <span>{source.status} · Last success: {formatRelativeTime(source.lastSyncedAt)}</span>
+                        {source.error && <span className="text-red-700 dark:text-red-400">{source.error}</span>}
                       </div>
                       <h3 className="text-base font-semibold text-stone-900 dark:text-slate-100 mt-1">
                         {source.name}
@@ -2582,3 +2468,4 @@ export default function App() {
     </div>
   );
 }
+

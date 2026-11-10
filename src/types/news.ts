@@ -1,4 +1,5 @@
 export enum SeverityLevel {
+  UNKNOWN = 'Unknown',
   CRITICAL = 'Critical',
   HIGH = 'High',
   ELEVATED = 'Elevated',
@@ -50,6 +51,7 @@ export interface BeginnerThreatGuide {
 }
 
 export interface CyberDispatch {
+  dataOrigin?: 'live' | 'demo';
   id: string;
   title: string;
   summary: string;
@@ -83,5 +85,7 @@ export interface NewsSourceConfig {
   enabled: boolean;
   articleCount: number;
   lastSyncedAt: string;
-  status: 'Active' | 'Synced' | 'Custom';
+  status: 'Active' | 'Synced' | 'Custom' | 'Pending' | 'Stale' | 'Error' | 'Unsupported';
+  error?: string;
 }
+
