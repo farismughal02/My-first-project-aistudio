@@ -8,9 +8,10 @@ export const DEFAULT_SOURCES: NewsSourceConfig[] = [
     feedUrl: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
     siteUrl: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
     enabled: true,
-    articleCount: 14,
-    lastSyncedAt: new Date().toISOString(),
-    status: 'Active',
+    articleCount: 0,
+    lastSyncedAt: '',
+    status: 'Unsupported',
+    error: 'KEV JSON integration is not implemented.',
   },
   {
     id: 'the-hacker-news',
@@ -19,9 +20,9 @@ export const DEFAULT_SOURCES: NewsSourceConfig[] = [
     feedUrl: 'https://feeds.feedburner.com/TheHackersNews',
     siteUrl: 'https://thehackernews.com',
     enabled: true,
-    articleCount: 18,
-    lastSyncedAt: new Date().toISOString(),
-    status: 'Active',
+    articleCount: 0,
+    lastSyncedAt: '',
+    status: 'Pending',
   },
   {
     id: 'bleeping-computer',
@@ -30,9 +31,9 @@ export const DEFAULT_SOURCES: NewsSourceConfig[] = [
     feedUrl: 'https://www.bleepingcomputer.com/feed/',
     siteUrl: 'https://www.bleepingcomputer.com',
     enabled: true,
-    articleCount: 16,
-    lastSyncedAt: new Date().toISOString(),
-    status: 'Active',
+    articleCount: 0,
+    lastSyncedAt: '',
+    status: 'Pending',
   },
   {
     id: 'krebs-security',
@@ -41,9 +42,9 @@ export const DEFAULT_SOURCES: NewsSourceConfig[] = [
     feedUrl: 'https://krebsonsecurity.com/feed/',
     siteUrl: 'https://krebsonsecurity.com',
     enabled: true,
-    articleCount: 8,
-    lastSyncedAt: new Date().toISOString(),
-    status: 'Active',
+    articleCount: 0,
+    lastSyncedAt: '',
+    status: 'Pending',
   },
   {
     id: 'sans-isc',
@@ -52,9 +53,9 @@ export const DEFAULT_SOURCES: NewsSourceConfig[] = [
     feedUrl: 'https://isc.sans.edu/rssfeed_full.xml',
     siteUrl: 'https://isc.sans.edu',
     enabled: true,
-    articleCount: 11,
-    lastSyncedAt: new Date().toISOString(),
-    status: 'Active',
+    articleCount: 0,
+    lastSyncedAt: '',
+    status: 'Pending',
   },
   {
     id: 'project-zero',
@@ -63,19 +64,20 @@ export const DEFAULT_SOURCES: NewsSourceConfig[] = [
     feedUrl: 'https://googleprojectzero.blogspot.com/feeds/posts/default',
     siteUrl: 'https://googleprojectzero.blogspot.com',
     enabled: true,
-    articleCount: 9,
-    lastSyncedAt: new Date().toISOString(),
-    status: 'Active',
+    articleCount: 0,
+    lastSyncedAt: '',
+    status: 'Pending',
   },
 ];
 
-const now = Date.now();
+const now = Date.parse('2026-11-02T12:00:00Z');
 const minsAgo = (m: number) => new Date(now - m * 60 * 1000).toISOString();
 
 export const CURATED_DISPATCHES: CyberDispatch[] = [
   {
+    dataOrigin: 'demo',
     id: 'dispatch-cve-2026-41892',
-    title: 'Unauthenticated Remote Code Execution Discovered in Enterprise Edge VPN Gateways',
+    title: '[DEMO] Unauthenticated Remote Code Execution Discovered in Enterprise Edge VPN Gateways',
     summary:
       'Threat researchers have confirmed active in-the-wild exploitation of a pre-authentication heap overflow affecting enterprise SSL-VPN appliances across financial and critical energy operators.',
     leadBody: [
@@ -94,7 +96,7 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     cveId: 'CVE-2026-41892',
     cvssScore: 9.8,
     activelyExploited: true,
-    imageUrl: '/src/assets/images/featured_zero_day_datacenter_1793628778962.jpg',
+    imageUrl: '/images/featured_zero_day_datacenter_1793628778962.jpg',
     imageCaption:
       'Fig. 1 — High-density enterprise perimeter switching vault where out-of-band telemetry first flagged anomalous TLS session ticket payloads.',
     affectedProducts: [
@@ -136,8 +138,9 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     ],
   },
   {
+    dataOrigin: 'demo',
     id: 'dispatch-bgp-route-leak-cloud',
-    title: 'Sub-Second BGP Prefix Hijack Briefly Redirects Multi-Cloud API Gateway Traffic',
+    title: '[DEMO] Sub-Second BGP Prefix Hijack Briefly Redirects Multi-Cloud API Gateway Traffic',
     summary:
       'An unauthorized Autonomous System announcement lacking strict RPKI Route Origin Validation diverted encrypted control-plane traffic across four regional cloud interconnects for 114 seconds.',
     leadBody: [
@@ -156,7 +159,7 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     cveId: 'CVE-2026-39014',
     cvssScore: 8.2,
     activelyExploited: false,
-    imageUrl: '/src/assets/images/dispatch_cloud_infrastructure_1793628780951.jpg',
+    imageUrl: '/images/dispatch_cloud_infrastructure_1793628780951.jpg',
     imageCaption:
       'Fig. 2 — Structured fiber-optic distribution cross-connects at a Tier-1 metropolitan internet exchange point.',
     affectedProducts: [
@@ -181,8 +184,9 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     ],
   },
   {
+    dataOrigin: 'demo',
     id: 'dispatch-hsm-side-channel',
-    title: 'Electromagnetic Fault Injection Bypasses Firmware Attestation in Hardware Security Modules',
+    title: '[DEMO] Electromagnetic Fault Injection Bypasses Firmware Attestation in Hardware Security Modules',
     summary:
       'Academic and industrial cryptographers demonstrated a non-invasive voltage glitching technique capable of extracting ECDSA P-384 signing keys from unshielded PCIe cryptographic accelerators.',
     leadBody: [
@@ -201,7 +205,7 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     cveId: 'CVE-2026-37411',
     cvssScore: 7.9,
     activelyExploited: false,
-    imageUrl: '/src/assets/images/dispatch_hardware_silicon_1793628781255.jpg',
+    imageUrl: '/images/dispatch_hardware_silicon_1793628781255.jpg',
     imageCaption:
       'Fig. 3 — Enterprise 7nm cryptographic silicon wafer alongside a tamper-responsive PCIe HSM-900 accelerator card.',
     affectedProducts: [
@@ -225,8 +229,9 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     ],
   },
   {
+    dataOrigin: 'demo',
     id: 'dispatch-linux-io-uring-priv-esc',
-    title: 'Linux Kernel io_uring Fixed-Buffer Reference Count Race Permits Local Container Escape',
+    title: '[DEMO] Linux Kernel io_uring Fixed-Buffer Reference Count Race Permits Local Container Escape',
     summary:
       'A use-after-free condition in the asynchronous I/O subsystem allows unprivileged container processes to overwrite host page cache structures and achieve host root execution.',
     leadBody: [
@@ -267,8 +272,9 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     ],
   },
   {
+    dataOrigin: 'demo',
     id: 'dispatch-ransomware-esxi-vcenter',
-    title: 'BlackBastion Affiliate Group Targets Unpatched vCenter and Hypervisor Management Planes',
+    title: '[DEMO] BlackBastion Affiliate Group Targets Unpatched vCenter and Hypervisor Management Planes',
     summary:
       'Incident responders warn of rapid encryption campaigns leveraging stolen SAML signing certificates to mint administrative tokens on virtualized storage clusters.',
     leadBody: [
@@ -314,8 +320,9 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     ],
   },
   {
+    dataOrigin: 'demo',
     id: 'dispatch-npm-pypi-supply-chain',
-    title: 'Coordinated Typosquatting Campaign Injects Credential Stealers into 42 CI/CD Utility Packages',
+    title: '[DEMO] Coordinated Typosquatting Campaign Injects Credential Stealers into 42 CI/CD Utility Packages',
     summary:
       'Automated static analysis uncovered obfuscated post-install hooks harvesting AWS OIDC tokens, GitHub Actions secrets, and Kubernetes kubeconfig files during build pipelines.',
     leadBody: [
@@ -345,8 +352,9 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     ],
   },
   {
+    dataOrigin: 'demo',
     id: 'dispatch-nist-pqc-migration-mandate',
-    title: 'CISA and NIST Issue Updated Timeline for Post-Quantum TLS 1.3 Key Exchange Adoption',
+    title: '[DEMO] CISA and NIST Issue Updated Timeline for Post-Quantum TLS 1.3 Key Exchange Adoption',
     summary:
       'Federal agencies and critical infrastructure operators receive concrete implementation guidance for hybrid ML-KEM (FIPS 203) key establishment to counter harvest-now, decrypt-later threats.',
     leadBody: [
@@ -369,3 +377,4 @@ export const CURATED_DISPATCHES: CyberDispatch[] = [
     ],
   },
 ];
+

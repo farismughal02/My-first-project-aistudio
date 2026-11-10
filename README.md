@@ -2,150 +2,129 @@
 
 Cybersecurity news aggregation with AI learning guides for beginners.
 
-Sentinel Wire brings security stories into one interface and helps students understand the threats behind the headlines. Built as a first project with AI Studio, it pairs a React frontend with an Express backend for fetching feeds and requesting explanations from Gemini.
+Sentinel Wire is a learning and portfolio project built with React, TypeScript, Vite, Express, and the Google Gen AI SDK. It combines live RSS/Atom headlines with a separate collection of fictional learning examples.
 
-## Main features
+## Features
 
-- **News feed:** Fetches RSS/Atom stories from configured sources, including The Hacker News, BleepingComputer, KrebsOnSecurity, SANS ISC, and Google Project Zero. Live articles are merged with bundled dispatches and sorted by publication time.
-- **Search and filtering:** Search article text and available metadata; filter by category, severity, source, or the actively exploited flag. Separate views organize vulnerabilities and advisories.
-- **Article reader:** Read summaries and details, open original source links, and view affected products, indicators of compromise, and remediation steps when included in the article data.
-- **Beginner learning guides:** Request plain-English summaries, everyday analogies, attack breakdowns, jargon definitions, protection tips, and a multiple-choice comprehension question. Ask follow-up questions about an article or regenerate its guide.
-- **Read Later:** Save articles in the browser using localStorage, then search or filter the saved list without signing in.
-- **Source controls:** Add custom RSS/Atom URLs and toggle sources in the current interface.
-- **Refresh and export:** Refresh manually, enable 30-second polling, and export the current view or saved articles as JSON.
-- **Theme preference:** Switch between light and dark modes, with the preference stored locally.
+- Live RSS/Atom feed, search, category/source filters, manual refresh and 30-second polling.
+- Read Later, theme and source-mute preferences saved in the current browser.
+- Owner-only Gemini learning guides and follow-up questions about server-known articles.
+- Owner-only custom feed registration on explicitly approved HTTPS hosts.
+- Separate **View demo stories** mode. Example headlines and JSON exports carry demo labels.
+- Per-source refresh status; failed feeds retain their last successful articles.
+- JSON export of the displayed or saved articles.
 
-## Current scope and data limitations
+## Data accuracy
 
-This is a learning and portfolio prototype. The feed includes bundled example dispatches, and the interface can inject simulated breaking alerts. These entries should not be treated as independently verified reporting, even when they display source names, CVE identifiers, or recent timestamps.
+Live article categories are keyword suggestions. **Severity, CVSS and exploitation status are unknown unless verified**; the application does not infer numeric CVSS scores from headlines. Demo stories, CVEs, products, indicators and mitigation examples are fictional learning material, not verified reporting or operational advice. Demo timestamps are fixed rather than refreshed on startup.
 
-For live articles, categories, severity, exploitation flags, and some displayed CVSS values are assigned through keyword rules in `server.ts`. They are not verified vulnerability assessments. The configured CISA KEV JSON source is currently excluded from the RSS fetching path; a CISA entry in the source list does not mean the KEV catalog is being synchronized.
-
-The server parses up to six entries per feed and caches nonempty live results for 45 seconds. Third-party feed failures can leave the bundled content visible. AI responses depend on Gemini access and may need checking against the original advisory.
-
-Custom sources and generated-guide caches are held in server memory and reset when the server restarts. Source toggles are frontend state rather than persistent server configuration. Saved articles and theme preferences belong to the current browser; there is no account-based synchronization or database persistence.
-
-## Technology stack
-
-| Layer | Technologies |
-| --- | --- |
-| Frontend | React 19, TypeScript, Vite |
-| Styling and UI | Tailwind CSS 4, Lucide React icons |
-| Backend | Express 4, TypeScript executed with tsx |
-| AI | Google Gen AI SDK (`@google/genai`), called from the server |
-| Configuration | dotenv and `.env.example` |
-| Storage | Browser localStorage and in-memory server state |
+The CISA KEV JSON entry is marked **Unsupported**: a KEV integration has not been implemented. RSS parsing is limited to six entries per source and is not a complete XML syndication implementation. AI explanations can be inaccurate; check the original advisory.
 
 ## Local setup
 
-### Prerequisites
-
-- Git and a Node.js installation with npm. The repository does not declare a required Node.js version; use a current runtime compatible with the dependency versions in `package.json`.
-- Internet access for live feeds and Gemini requests.
-- A Gemini API key for AI guides and follow-up answers. Feed browsing does not require the key.
-
-### Install and run
+Use **Node.js 24** and **npm 11**. `.nvmrc` selects Node 24, and `package-lock.json` makes installs repeatable.
 
 ```bash
 git clone https://github.com/farismughal02/My-first-project-aistudio.git
 cd My-first-project-aistudio
-npm install
+npm ci
 ```
 
-Copy `.env.example` to `.env` in the project root.
-
-macOS/Linux:
+Copy `.env.example` to `.env`:
 
 ```bash
+# macOS/Linux
 cp .env.example .env
 ```
 
-Windows PowerShell:
-
 ```powershell
+# Windows PowerShell
 Copy-Item .env.example .env
 ```
 
-Edit `.env` as described below, then start the app:
+Feed browsing works without a Gemini key. Generate an owner token locally:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+Put the generated value in `OWNER_ACCESS_TOKEN` in `.env`. Set `GEMINI_API_KEY` and `GEMINI_MODEL` to values available to your account to enable AI. Never commit these secrets.
 
 ```bash
 npm run dev
 ```
 
-Open **http://localhost:3000**. The development command starts Express with Vite middleware, so a separate frontend server is unnecessary. Port `3000` is hardcoded in `server.ts`.
+Open **http://localhost:3000**. Expand **Owner access — AI and source management** and enter the owner token to use those controls. The token stays in the tab's memory and is cleared on reload. Do not share it with ordinary visitors. Use HTTPS when hosting beyond localhost.
 
-The repository includes `bun.lock`; the commands above use the npm scripts declared in `package.json`.
+## Configuration
 
-## Environment variables
-
-The server loads the root `.env` file through `dotenv/config`.
-
-| Variable | Guidance |
+| Variable | Purpose |
 | --- | --- |
-| `GEMINI_API_KEY` | Replace `MY_GEMINI_API_KEY` with your own key to use AI explanations and follow-up answers. The key is read on the server. The example file notes that AI Studio can inject it through its Secrets panel. |
-| `APP_URL` | Included in the template for the hosted application URL, but not currently read by the application code. It is not needed for local functionality. |
-| `NODE_ENV` | Set to `production` when serving the built frontend through Express. Otherwise the server uses Vite development middleware. |
-| `DISABLE_HMR` | Optional Vite setting: `true` disables hot module replacement and file watching. Leave unset for ordinary local development. |
+| `OWNER_ACCESS_TOKEN` | Random secret of 32–256 characters. Required at production startup; missing in development disables owner controls. |
+| `GEMINI_API_KEY` | Server-only Gemini API key. |
+| `GEMINI_MODEL` | Model available to your account; both this and the key are required for AI. |
+| `PORT` | Listening port, default `3000`. |
+| `HOST` | Bind address, default `127.0.0.1`. Set `0.0.0.0` when required by a container/hosting platform. |
+| `AI_DAILY_REQUEST_LIMIT` | Global generation request allowance per 24-hour window; default `100`. |
+| `FEED_ALLOWED_HOSTS` | Additional exact HTTPS feed hostnames, comma separated. Default source hosts are included. Redirect destinations must also be approved. |
+| `DISABLE_HMR` | Optional development setting; `true` disables Vite hot reloading/file watching. |
 
-Example local `.env`:
+`APP_URL` is not used. Secrets must not use a `VITE_` prefix, because frontend configuration is public.
 
-```dotenv
-GEMINI_API_KEY="replace_with_your_key"
-APP_URL="http://localhost:3000"
-```
-
-Keep actual keys out of commits and screenshots. `.gitignore` excludes `.env*` files while allowing `.env.example`. Do not rename the key to a `VITE_` variable or place it in frontend code.
-
-Both AI endpoints currently request `gemini-3.8-flash` in `server.ts`. If that model is unavailable to your key, update both calls to a model available to your account. The model is not configurable through an environment variable in the current implementation.
-
-## Available commands
-
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start Express with Vite development middleware. |
-| `npm run lint` | Run TypeScript checking (`tsc --noEmit`); this is not an ESLint command. |
-| `npm run build` | Build the frontend into `dist/`. |
-| `npm start` | Start the Express server; set `NODE_ENV=production` to serve `dist/`. |
-| `npm run preview` | Preview the Vite frontend build only; it does not start the Express API. |
-| `npm run clean` | Remove `dist` and `server.js` using `rm -rf` (requires a compatible shell). |
-
-### Serve a production build locally
+## Build, run and check
 
 ```bash
+npm run lint
 npm run build
-```
-
-macOS/Linux:
-
-```bash
-NODE_ENV=production npm start
-```
-
-Windows PowerShell:
-
-```powershell
-$env:NODE_ENV = "production"
+npm test
 npm start
 ```
 
-Open **http://localhost:3000**. Keep the installed runtime dependencies available: the start script executes `server.ts` with `tsx`.
+`build` produces `dist/` for the frontend and `build/server.js` for the backend. `start` explicitly runs production mode using Node; it does not need `tsx` or Vite development middleware. Run these commands from the repository root. Build before running tests, because the API smoke test starts the production server.
+
+For deployment, build with development dependencies installed, then install/retain runtime dependencies with `npm ci --omit=dev`. Deploy `build/`, `dist/`, `package.json`, `package-lock.json`, and the runtime dependencies. Supply environment variables through your host's secret configuration. Configure HTTPS at your hosting platform or reverse proxy.
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Express plus Vite development middleware. |
+| `npm run lint` | TypeScript checking; not ESLint. |
+| `npm run build` | Build frontend and backend. |
+| `npm test` | Security, feed-cache, RSS, AI-validation and production API tests. |
+| `npm start` | Start the built production server. |
+| `npm run preview` | Frontend preview only; does not start the API. |
+| `npm run clean` | Cross-platform removal of generated build directories. |
+
+GitHub Actions runs a locked install, typechecking, build and tests on pushes and pull requests.
+
+## Security and operational boundaries
+
+- AI and source creation require the owner bearer token. Public visitors can read the feed. This is a single-owner prototype, not a multi-user account system.
+- API traffic is limited to 120 requests/minute per socket address; owner actions to 10/minute. Forwarded IP headers are not trusted. Behind a reverse proxy, clients may share a limit; configure identity-aware limits at the hosting edge for larger deployments.
+- Gemini calls have a 30-second timeout, a two-request concurrency ceiling, an output-token bound and a global request allowance. Input articles come from the server, not browser-supplied text. Guide JSON is checked before caching/rendering.
+- Guides are cached by article content and model for one hour, with at most 200 entries. Limits and caches are in memory and reset on restart; they are not shared across replicas. Provider-side quotas remain necessary for an enduring spending cap.
+- Feed URLs require approved HTTPS hosts. DNS answers must be public, connections are pinned to validated addresses, and redirects are revalidated. Downloads have a five-second deadline, a 1 MB size bound and at most three concurrent downloads.
+- Feed refreshes share one in-flight operation and are cached for 45 seconds, including failures. Public `force=true` does not bypass this cache.
+- Up to 20 custom sources are retained in server memory. They disappear on restart. Muting a source is a persistent browser display preference; it does not stop server polling.
+- Invalid API JSON receives a generic error. `/api/health` reports process health, not feed or Gemini availability.
 
 ## Project structure
 
 | Path | Responsibility |
 | --- | --- |
-| `src/App.tsx` | Feed interface, filters, article reader, AI panels, saved articles, and export actions |
-| `src/data/curatedDispatches.ts` | Default sources and bundled example dispatches |
-| `src/types/news.ts` | Shared article, source, and learning-guide types |
-| `src/index.css` | Global styles and Tailwind configuration |
-| `server.ts` | Feed fetching, parsing, caching, source creation, Gemini endpoints, and frontend serving |
-| `vite.config.ts` | React/Tailwind plugins and development settings |
-| `.env.example` | Environment-variable template |
+| `src/App.tsx` | News UI, owner access, saved stories, source preferences and AI panels. |
+| `src/data/curatedDispatches.ts` | Default source configuration and labeled demo stories. |
+| `src/types/news.ts` | Shared data types. |
+| `public/images/` | Demo images copied into the production build. |
+| `server.ts` | Configuration, API access controls, Gemini endpoints and startup. |
+| `server/security.ts` | URL restrictions, bounded downloads, authentication and rate limiting. |
+| `server/domain.ts` | Stable IDs, AI validation and bounded guide cache. |
+| `server/feed-store.ts` | Shared refreshes, per-source status and last-good article retention. |
+| `server/rss.ts` | Feed parsing and suggested categories. |
+| `tests/` | Regression and production smoke tests. |
 
 ## Future improvements
 
-- Clearly label bundled and simulated entries throughout the interface and separate them from live reporting.
-- Integrate the CISA KEV JSON catalog and replace heuristic CVSS values with verified source data.
-- Persist custom sources and preferences, improve feed parsing, and expose per-source errors.
-- Add automated tests for parsing, filtering, and API error paths, plus model configuration and response validation.
-- Add authentication, rate limiting, and stricter custom-feed URL validation before public deployment.
+- Integrate CISA KEV and verified vendor vulnerability metadata.
+- Replace the limited RSS parser with a fully tested syndication parser.
+- Add persistent source storage and user accounts if the app grows beyond one owner.
+- Add shared limits/caches for multiple server replicas.
